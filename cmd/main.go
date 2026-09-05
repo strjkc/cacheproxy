@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,12 +45,15 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	newUrl := state.BaseURL + path
 	item, ok := cache.GetItem(newUrl)
 	if ok {
+		fmt.Println("Item found in cache!")
 		expired := cache.IsCacheItemExpired(newUrl)
 		if !expired {
+			fmt.Println("Item not expired! Returning it")
 			w.Header().Set("X-Cache", "HIT")
 			w.Write(item.Reply)
 			return
 		}
+		fmt.Println("Item expired! Fetching it")
 		resp, err := getAndCache(newUrl)
 		if err != nil {
 			w.Write([]byte("error"))
@@ -58,6 +62,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 		io.Copy(w, resp.Body)
 	}
 	if !ok {
+		fmt.Println("Item not found in cache! Fetching it")
 		resp, err := getAndCache(newUrl)
 		if err != nil {
 			w.Write([]byte("error"))
@@ -65,23 +70,6 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Cache", "MISS")
 		io.Copy(w, resp.Body)
 	}
-	//from the url i strip the path after the port
-	// i add it to the base url
-	// i check the cache
-	// if not ok
-	// i get the new url
-	// i cache the response under the url with the current timestamp
-	// i add the cache not hit header to the headers and copy the response out
-	// if ok
-	// i check if timestamp expired
-	// if no, i return the response with the cache hit header
-	// if yes, i do the same as if it was not present but i update the existing key.
-	//res, err := http.Get("https://pokeapi.co/api/v2/berry/1")
-	//if err != nil {
-	//w.Write([]byte("err"))
-	//}
-	//w.WriteHeader(res.StatusCode)
-	//io.Copy(w, res.Body)
 }
 
 func getAndCache(newUrl string) (*http.Response, error) {
@@ -89,10 +77,15 @@ func getAndCache(newUrl string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &http.Response{}, err
+	}
 	c := s.CacheEntry{b, time.Now()}
 	//TODO: maybe have one function that either caches new or updates
 	cache.UpdateCache(c, newUrl)
+	resp.Body = io.NopCloser(bytes.NewReader(b))
 	return resp, nil
 }
 
