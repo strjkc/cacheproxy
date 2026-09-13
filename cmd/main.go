@@ -33,6 +33,7 @@ func main() {
 	cache = c.NewCache()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", defaultHandler)
+	go cache.Reap()
 	for {
 		err := http.ListenAndServe(fmt.Sprintf(":%v", port), mux)
 		if err != nil {
@@ -42,6 +43,7 @@ func main() {
 	}
 }
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	cache.ReportStats(2)
 	path := r.URL.Path
 	newUrl := state.BaseURL + path
 	item, ok := cache.GetItem(newUrl)
