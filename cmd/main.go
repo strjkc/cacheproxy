@@ -16,6 +16,8 @@ var validParams []string = []string{"--port", "--origin"}
 var state *s.State
 var cache *c.Cache
 
+
+
 func main() {
 	args := os.Args
 	if len(args) != 5 {
