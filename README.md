@@ -11,7 +11,7 @@ For example, if the user runs the following command:
 caching-proxy --port 3000 --origin http://dummyjson.com
 The caching proxy server should start on port 3000 and forward requests to http://dummyjson.com.
 
-Taking the above example, if the user makes a request to http://localhost:3000/products, the caching proxy server should forward the request to http://dummyjson.com/products, return the response along with headers and cache the response. Also, add the headers to the response that indicate whether the response is from the cache or the server.
+Taking the above example, if the user makes a request to http://localhost:3000/products, the caching proxy server should forward the request to http://dummyjson.com/products, return the response along with headers and cache the response. Also, add the headers to the response that indicate whether the response is from the cache or the server..
 
 # If the response is from the cache
 X-Cache: HIT
